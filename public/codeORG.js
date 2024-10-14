@@ -1,3 +1,8 @@
+export const startGame = () => {
+    console.log("Started!")
+    createTeamPage();
+};
+
 const startPage = document.getElementById("startPage");
 const teamPageDiv = document.createElement("div");
 const wordInputPage = document.createElement("div");
@@ -13,32 +18,151 @@ let usedWords = []
 let currentTeam;
 let currentTeamIndex = 0;    
 
-const createTeamInput = () => {
+const createButton = (text) => {
+    const buttonElement = document.createElement("button");
+    const buttonSpan = document.createElement("span");
+    buttonSpan.classList.add("button_top");
+    buttonElement.append(buttonSpan);
+    buttonSpan.append(text);
+
+    return buttonElement;
+}
+
+const getWrappedIndex = (arr, index) => {
+    return ((index % arr.length) + arr.length) % arr.length;
+}
+
+const colors = ["65, 105, 225", "220, 20, 60", "255, 215, 0", "34, 139, 34", "128, 0, 128"]
+
+const startButton = createButton(document.createTextNode("Start"));
+startPage.append(startButton);
+startButton.addEventListener("click", (e) => {
+    createTeamPage();
+});
+
+class team {
+    name = "default_team";
+    color = "255, 0, 0";
+    score = 0;
+    correctWords;
+    passWords;
+
+    constructor(name, color, score, correctWords, passWords) {
+        this.name = name;
+        this.color = color;
+        this.score = score;
+        this.correctWords = correctWords;
+        this.passWords = passWords;
+    }
+}
+
+// FIX: remove default teams and words
+
+const randomWords = [
+    'apple','orange','banana','dog','cat','sun','moon','tree','book','happy','friend','green','water','run','jump','song','flower','smile','sleep','coffee'
+];
+
+const randomTeams = [
+    "Dog team", "Cat team", "Fish team", "Bear team"
+]
+
+const gamemodes = [
+    {name: "CHARADES", id: "char", 
+        howto:`<div>How to play Charades...</div>
+        <div class="title"> How to Act Out the Word </div>
+        <span>‧ A player from the active team picks a word or phrase (without showing it).</span>
+        <span>‧ They act it out silently using gestures and body movements. No talking, sounds, or spelling allowed.
+        </span>
+        <div class="title">Guessing</div>
+        <span>‧ The acting player's teammates try to guess the word or phrase based on the actions.</span>
+        <span>‧ They have 1 to 2 minutes to guess correctly before time runs out.</span>
+        <div class="title">Scoring</div>
+        <span>‧ If the team guesses correctly within the time limit, they earn 1 point.</span>
+        <span>‧ If they don't guess in time, no points are awarded.</span>
+        <span>‧ Rotate turns between teams until a set score is reached or time runs out.</span>`
+    }, 
+    {name: "ALIAS", id: "alias", 
+        howto: `<div>How to play Alias...</div>
+        <div class="title">How to Describe the Word</div>
+        <span>‧ A player from the active team picks a word (without showing it).</span>
+        <span>‧ They describe the word using synonyms, explanations, or clues, but cannot say the word itself or use direct translations.</span>
+        <div class="title">Guessing</div>
+        <span>‧ The acting player's teammates try to guess the word based on the description.</span>
+        <span>‧ They have 1 to 2 minutes to guess as many words as possible before time runs out.</span>
+        <div class="title">Scoring</div>
+        <span>‧ The team earns 1 point for each correct guess within the time limit.</span>
+        <span>‧ No points are awarded for incorrect guesses or skipped words.</span>
+        <span>‧ Rotate turns between teams until a set score is reached or time runs out.</span>`
+        
+    }, 
+    {name: "Other", id: "other", 
+        howto: `<div class="title">It's up to you to decide what to play this round.</div>`}
+]
+
+let currentMode = 0;
+randomWords.forEach(element => {
+    wordBank.push(element)
+});
+
+randomTeams.forEach((e, i) => {
+    const newteam = new team(e, colors[getWrappedIndex(colors, i)], 0, [], []);
+    teams.push(newteam);
+})
+
+const createTeamPage = () => {
     removeAllAndHide(startPage);
 
+    const teamscont = document.createElement("div");
+    teamscont.classList.add("teamscont");
     const inputcont = document.createElement("div");
     inputcont.classList.add("inputcont");
     const nameinput = document.createElement("input");
     nameinput.type = "text";
     nameinput.value = "default_team";
-    const createbutton = createButton(document.createTextNode("Create Team"));
+    const addbutton = createButton(document.createTextNode("Add Team"));
+    const finishbutton = createButton(document.createTextNode("Finish"));
     inputcont.append(nameinput)
-    inputcont.append(createbutton)
+    inputcont.append(addbutton)
+    inputcont.append(finishbutton)
     teamPageDiv.append(inputcont)
+    teamPageDiv.append(teamscont)
     document.body.append(teamPageDiv)
     teamPageDiv.classList.add("teamPageDiv")
 
+    const updateteamlist = () =>{
+        removeAll(teamscont)
+        teams.forEach((e, i) => {
+            const teamdiv = document.createElement("div")
+            teamdiv.classList.add("teamdiv")
+
+            teamdiv.style.backgroundColor = `rgba(${e.color}, var(--backA))`
+            teamdiv.style.borderColor = `rgba(${e.color}, var(--borderA))`
+
+            const indexdiv = document.createElement("div")
+            indexdiv.classList.add("indexdiv")
+            indexdiv.append(document.createTextNode(`${i+1}.`))
+            const teamname = document.createElement("div");
+            teamname.classList.add("teamname")
+            teamname.append(document.createTextNode(e.name))
+            teamscont.append(teamdiv)
+            teamdiv.append(indexdiv)
+            teamdiv.append(teamname)
+        });
+    }
+    updateteamlist();
+
     const createteam = () => {
         if(nameinput.value){
-            // TELL THE SERVER THAT HOST SHOULD DO THIS:
-            // host.createTeam()
+            const newteam = new team(nameinput.value, colors[getWrappedIndex(colors, teams.length)], 0, [], []);
+            teams.push(newteam);
             nameinput.value = "";
         }
         else{
-            utils.openModal("Silly goose!", 
+            openModal("Silly goose!", 
                 "There isn't anything to input.", 
                 null, () => {})
         }
+        updateteamlist();
     }
 
     nameinput.addEventListener('keyup', event => {
@@ -47,8 +171,20 @@ const createTeamInput = () => {
         }
     });
 
-    createbutton.addEventListener("click", (e) => {
+    addbutton.addEventListener("click", (e) => {
         createteam()
+    });
+
+    finishbutton.addEventListener("click", (e) => {
+        if(teams.length == 0){
+            openModal("Silly goose!", 
+                "There aren't any teams.", 
+                null, () => {})
+        }
+        else{
+            createWordInputPage();
+        }
+        console.log("teams:", teams);
     });
 }
 
@@ -61,9 +197,9 @@ const createWordInputPage = () => {
     const wordinput = document.createElement("input");
     wordinput.type = "text";
     wordinput.value = "default_word"; 
-    const addbutton = utils.createButton(document.createTextNode("Add Word"));
-    const nextbutton = utils.createButton(document.createTextNode("Next"));
-    const finishbutton = utils.createButton(document.createTextNode("Finish"));
+    const addbutton = createButton(document.createTextNode("Add Word"));
+    const nextbutton = createButton(document.createTextNode("Next"));
+    const finishbutton = createButton(document.createTextNode("Finish"));
 
     inputcont.append(wordinput)
     inputcont.append(addbutton)
@@ -80,8 +216,6 @@ const createWordInputPage = () => {
         worddiv.classList.add("worddiv");
         worddiv.append(document.createTextNode(word))
         wordscont.append(worddiv)
-
-        // SENT WORDS TO HOST
     }
 
     const checkWord = () => {
@@ -99,14 +233,14 @@ const createWordInputPage = () => {
                 wordinput.value = "";
             }
             if (wordBank.includes(wordinput.value.toLowerCase())){
-                utils.openModal("Warning!", 
+                openModal("Warning!", 
                 `The word you are attempting to add is already included in the word-bank. Are you sure you want to add a duplicate word?: ${wordinput.value}`, 
                 () => {addWord()}, () => {failedWord()})
             }
             else{addWord()}
         }
         else{
-            utils.openModal("Silly goose!", 
+            openModal("Silly goose!", 
                 "There isn't anything to input.", 
                 null, () => {})
         }
@@ -128,7 +262,7 @@ const createWordInputPage = () => {
 
     finishbutton.addEventListener("click", (e) => {
         if(wordBank.length == 0){
-            utils.openModal("Silly goose!", 
+            openModal("Silly goose!", 
                 "There aren't any words in the word-bank.", 
                 null, () => {})
         }
@@ -149,7 +283,7 @@ const startGameMode = (mode) => {
         const titlePage = document.createElement("div");
         titlePage.classList.add("titlepage");
 
-        const startButton = utils.createButton(document.createTextNode("Start"));
+        const startButton = createButton(document.createTextNode("Start"));
 
         const titleElement = document.createElement("div");
         titleElement.classList.add("pageTitle");
@@ -178,7 +312,7 @@ const startGameMode = (mode) => {
             removeAll(buttonBox)
 
             setTeam()
-            const readyButton = utils.createButton(document.createTextNode("Ready?"));
+            const readyButton = createButton(document.createTextNode("Ready?"));
             buttonBox.append(readyButton)
             gamePage.append(buttonBox);
 
@@ -239,7 +373,7 @@ const startGameMode = (mode) => {
                 usedWords = [];
                 removeAll(buttonBox);          
 
-                nextgamemodeButton = utils.createButton(document.createTextNode("Next Gamemode"))
+                nextgamemodeButton = createButton(document.createTextNode("Next Gamemode"))
                 nextgamemodeButton.addEventListener("click", (e) => {
                     currentMode++
                     startGameMode(gamemodes[currentMode]);
@@ -252,21 +386,21 @@ const startGameMode = (mode) => {
         const addbuttons = () => {
             removeAll(buttonBox);
 
-            const correctButton = utils.createButton(document.createTextNode("Correct"));
+            const correctButton = createButton(document.createTextNode("Correct"));
             buttonBox.append(correctButton);
 
             correctButton.addEventListener("click", (e) => {
                 correctORpass("correct")
             });
 
-            const passButton = utils.createButton(document.createTextNode("Pass"))
+            const passButton = createButton(document.createTextNode("Pass"))
             buttonBox.append(passButton);
 
             passButton.addEventListener("click", (e) => {
                 correctORpass("pass")
             });
 
-            const TESTtimeUpButton = utils.createButton(document.createTextNode("Time's Up"))
+            const TESTtimeUpButton = createButton(document.createTextNode("Time's Up"))
             TESTtimeUpButton.style.marginLeft = "auto";
             buttonBox.append(TESTtimeUpButton);
 
@@ -335,4 +469,63 @@ const getRandomUnusedWord = () => {
     }
     else {return null;}
 };
+
+
+const openModal = (header, text, confirmAct, cancelAct) => {
+    const modalBACK = document.createElement("div");
+    modalBACK.classList.add("modalBACK")
+
+    const modal = document.createElement("div");
+    modal.classList.add("modal");
+
+    const headerElement = document.createElement("div");
+    headerElement.append(header);
+    headerElement.classList.add("title");
+    modal.append(headerElement)
+
+    const textElement = document.createElement("div");
+    textElement.append(text);
+    modal.append(textElement)
+
+    const buttonCont = document.createElement("div");
+    buttonCont.classList.add("buttonCont");
+    modal.append(buttonCont)
+    
+    modalBACK.append(modal)
+    document.body.append(modalBACK)
+
+    if(confirmAct){
+        const confirmBut = createButton(document.createTextNode("Confirm"))
+        buttonCont.append(confirmBut)
+
+        confirmBut.addEventListener("click", (e) => {
+            removeSelf([modalBACK])
+            confirmAct()
+        });
+    }
+    if(cancelAct){
+        const cancelBut = createButton(document.createTextNode("Cancel"))
+        buttonCont.append(cancelBut)
+
+        cancelBut.addEventListener("click", (e) => {
+            removeSelf([modalBACK])
+            cancelAct()
+        });
+    }
+}
+
+const removeSelf = divs => {
+    divs.forEach(element => {
+        element.parentNode.removeChild(element);
+    });
+}
+
+const removeAll = div => {
+    while(div.firstChild){div.removeChild(div.firstChild)};
+}
+
+const removeAllAndHide = div => {
+    while(div.firstChild){div.removeChild(div.firstChild)};
+    div.style.display = 'none';
+}
 

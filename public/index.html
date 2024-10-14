@@ -3,29 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gul Bolle</title>
-    <link rel="stylesheet" href="/public/styles.css">
+    <title>Document</title>
 </head>
 <body>
-    <h1>Welcome to Gulbolle!</h1>
-    <button id="createRoomButton">Create Game Room</button>
-    <input type="text" id="roomIdInput" placeholder="Enter Room ID to Join">
-    <button id="joinRoomButton">Join Game Room</button>
+    
 </body>
+<script src="/code.js"></script>
 <script>
-    const startPage = document.getElementById("startPage");
+    // Get the roomID from the URL or use a fallback (make sure this matches the server URL structure)
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = urlParams.get('roomId');
 
-    document.getElementById('createRoomButton').addEventListener('click', async () => {
-        const response = await fetch('/create-room', { method: 'POST' });
-        const { roomId } = await response.json();
-        alert(`Game room created! Room ID: ${roomId}`);
-        window.location.href = `/play/${roomId}`;
-    });
+    if (!roomId) {
+        console.error('Error: roomId not found in the URL');
+    } else {
+        console.log(`Host connected to room: ${roomId}`);
+    }
 
-    document.getElementById('joinRoomButton').addEventListener('click', () => {
-        const roomId = document.getElementById('roomIdInput').value;
-        window.location.href = `/play/${roomId}`;
+    const button = document.createElement("button");
+    button.textContent = 'Ping Server';
+    document.body.append(button);
+
+    button.addEventListener('click', () => {
+        fetch(`/ping/${roomId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Server responded with status ${response.status}`);
+            }
+            return response.json(); // Parse the JSON response properly
+        })
+        .then(data => {
+            console.log(`Ping response for room ${roomId}:`, data);
+        })
+        .catch(error => {
+            console.error('Error sending ping:', error);
+        });
     });
 </script>
-</html>
 
+
+</html>

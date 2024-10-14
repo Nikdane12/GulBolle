@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Page</title>
+</head>
+<body>
+    <h1>Game Page</h1>
+    <p id="ping-status">Waiting for ping...</p>
+</body>
+<script>
+    // Get the roomID from the URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = urlParams.get('roomId') || 'defaultRoom';
+
+    // Function to handle the ping event
+    function handlePing() {
+        const pingStatus = document.getElementById('ping-status');
+        pingStatus.textContent = 'Ping received from host!';
+        console.log('Ping handled by handlePing() function');
+    }
+
+    // Establish a connection to the server's SSE endpoint for this specific room
+    const eventSource = new EventSource(`/events/${roomId}`);
+
+    // Listen for server-sent events for this specific room
+    eventSource.addEventListener('ping', (event) => {
+        console.log('Ping event received:', event.data);
+        handlePing(); // Call the function when the ping event is received
+    });
+</script>
+</html>
